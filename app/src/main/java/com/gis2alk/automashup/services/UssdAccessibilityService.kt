@@ -4,32 +4,59 @@ import android.accessibilityservice.AccessibilityService
 import android.os.Bundle
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import androidx.room.Room
 import com.gis2alk.automashup.models.ConstantValues
 import com.gis2alk.automashup.models.USSDProcedure
+import com.gis2alk.automashup.pages.sendRequest
+import com.gis2alk.automashup.repo.MashUpRepo
+import com.gis2alk.automashup.viewmodel.MashUpHIstoryViewModel
+import kotlinx.coroutines.*
 
 class UssdAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        val source = event?.source
+        val dbHelper =
+            Room.databaseBuilder(applicationContext, RoomDBHelper::class.java, "history").build()
 
+        val source = event?.source
         if (source != null) {
             if (event.className?.equals("android.app.AlertDialog") == true) {
-                processAProcedure(ConstantValues.mashUpUSSDProcedureForSelf, source)
+                processAProcedure(ConstantValues.mashUpUSSDProcedureForSelf, source, dbHelper)
 
             }
         }
 
     }
 
-    private fun processAProcedure(procedure: USSDProcedure, source: AccessibilityNodeInfo) {
+    private val completedMessage =
+        "congrats! you have purchased a mashup of ghc0.07 to be used for all networks plus free whatsapp. dial *550# to check"
+
+    private fun processAProcedure(
+        procedure: USSDProcedure,
+        source: AccessibilityNodeInfo,
+        dbHelper: RoomDBHelper
+    ) {
         val contentBody = source.findAccessibilityNodeInfosByViewId("com.android.phone:id/msg_text")
-        val contentBodyTexts = contentBody.map { each -> each.text.toString().lowercase() }
-        println(contentBodyTexts)
+        val contentBodyText = contentBody.first().toString().lowercase()
         val currentStep = procedure.ussdSteps.filter { ussdStep ->
-            contentBodyTexts.first().contains(ussdStep.lookout)
+            contentBodyText.contains(ussdStep.lookout)
         }
-        print("Current Step: $currentStep")
-        inputInFieldAndSend(source, currentStep.first().option)
-        clickSendView(source)
+        if (contentBodyText.contains(completedMessage)) {
+            clickViewById(source, "android:id/button2")
+            val mashUpHIstoryViewModel = MashUpRepo(dbHelper.mashupHistoryDAO())
+            runBlocking {
+                val currentlyWorked = mashUpHIstoryViewModel.getLastOne()
+                mashUpHIstoryViewModel.increaseCompleted(currentlyWorked.id!!)
+                if (currentlyWorked.completed < currentlyWorked.total) {
+                    applicationContext.sendRequest(false)
+                }
+            }
+
+            return
+        }
+        if (currentStep.isNotEmpty()) {
+            inputInFieldAndSend(source, currentStep.first().option)
+            clickViewById(source, "android:id/button1")
+        }
 
     }
 
@@ -52,9 +79,9 @@ class UssdAccessibilityService : AccessibilityService() {
 
     }
 
-    private fun clickSendView(source: AccessibilityNodeInfo) {
+    private fun clickViewById(source: AccessibilityNodeInfo, buttonId: String) {
 
-        val nodesById = source.findAccessibilityNodeInfosByViewId("android:id/button1")
+        val nodesById = source.findAccessibilityNodeInfosByViewId(buttonId)
         nodesById.forEach {
             it.performAction(AccessibilityNodeInfo.ACTION_CLICK)
 

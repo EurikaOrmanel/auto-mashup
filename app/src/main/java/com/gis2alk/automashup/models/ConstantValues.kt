@@ -22,7 +22,6 @@ object ConstantValues {
                     option = "5",
                     lookout = "select your preferred option"
                 ),
-
                 USSDStep(
                     option = "1",
                     lookout = "choose payment mode"

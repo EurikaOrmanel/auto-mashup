@@ -1,9 +1,10 @@
 package com.gis2alk.automashup.pages
 
 import android.Manifest
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.icu.util.Calendar
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -25,22 +26,28 @@ import com.google.accompanist.permissions.rememberPermissionState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.gis2alk.automashup.models.MashUpHistoryDTO
+import com.gis2alk.automashup.services.RoomDBHelper
+import com.gis2alk.automashup.viewmodel.MashUpHIstoryViewModel
 import com.google.accompanist.permissions.PermissionStatus
 
 
+@SuppressLint("NewApi")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
-fun HomePage() {
+fun HomePage(dbHelper: RoomDBHelper) {
+    val mashUpHIstoryViewModel = MashUpHIstoryViewModel(dbHelper.mashupHistoryDAO())
     val context = LocalContext.current
-    var phoneNumberInput by rememberSaveable { mutableStateOf("") }
+    var numberOfPurchases by rememberSaveable { mutableStateOf("") }
     val permissionsState =
         rememberPermissionState(permission = Manifest.permission.CALL_PHONE)
+
+//    val allHistory by mashUpHIstoryViewModel.allHistory.observeAsState()
     Scaffold(
         topBar = {
             SmallTopAppBar(title = {
@@ -61,13 +68,23 @@ fun HomePage() {
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 PhoneNumberInput { newValue ->
-                    phoneNumberInput = newValue
+                    numberOfPurchases = newValue
                 }
                 OutlinedButton(
-                    modifier = Modifier.height(IntrinsicSize.Max),
+                    modifier = Modifier
+                        .height(IntrinsicSize.Max),
                     onClick = {
                         when (permissionsState.status) {
-                            PermissionStatus.Granted -> context.sendRequest()
+                            PermissionStatus.Granted -> {
+                                context.sendRequest()
+                                mashUpHIstoryViewModel.addOne(
+                                    MashUpHistoryDTO(
+                                        total = numberOfPurchases.toInt(),
+                                        completed = 0,
+                                        timestamp = Calendar.getInstance().time
+                                    )
+                                )
+                            }
                             is PermissionStatus.Denied -> {
                                 try {
                                     permissionsState.launchPermissionRequest()
@@ -77,9 +94,7 @@ fun HomePage() {
                                         "Please permit us to read yo shit",
                                         Toast.LENGTH_LONG
                                     ).show()
-
                                 }
-
                             }
                         }
                     },
@@ -87,6 +102,7 @@ fun HomePage() {
                     Image(
                         Icons.Default.Call, contentDescription = "Dial",
                     )
+//                    Text("Buy Mashup")
                 }
             }
         }
@@ -97,14 +113,17 @@ fun HomePage() {
 @Composable
 @Preview
 fun HomePagePreview() {
-    HomePage()
+//    HomePage(dbHelper)
 }
 
 
-fun Context.sendRequest() {
+fun Context.sendRequest(calledInExistingActivity: Boolean = true) {
     val uri = "tel:*567*1*1*1*2" + Uri.encode("#")
     val intent = Intent(Intent.ACTION_CALL).apply {
         data = Uri.parse(uri)
+        if (!calledInExistingActivity) {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
     }
     this.startActivity(intent)
 }
@@ -120,10 +139,11 @@ fun PhoneNumberInput(
     Column {
 
         OutlinedTextField(
+//            modifier = Modifier.,
             value = inputText,
             onValueChange = {
                 inputText = it
-                if (inputText.isPhoneNumber()) {
+                if (inputText.isNumber()) {
                     onInputChanged.invoke(it)
                 }
             },
@@ -139,7 +159,7 @@ fun PhoneNumberInput(
                 },
             ),
 
-            label = { Text("\uD83C\uDDEC\uD83C\uDDED MTN Number") }
+            label = { Text("Number of times") }
         )
 
         if (!inputIsInvalid) {
