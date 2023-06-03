@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Auto Mashup</string>
+    <string name="ussd_service_label">Auto MashUp USSD Service</string>
+    <string name="ussd_service_description">Auto Mashup uses this to enable auto ussd service interaction. Please turn this off after use.</string>
+</resources>
