@@ -8,7 +8,11 @@ import android.icu.util.Calendar
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -25,15 +29,22 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.gis2alk.automashup.models.MashUpHistoryDTO
 import com.gis2alk.automashup.services.RoomDBHelper
 import com.gis2alk.automashup.viewmodel.MashUpHIstoryViewModel
+import com.gis2alk.automashup.widgets.MashUpHistoryItem
 import com.google.accompanist.permissions.PermissionStatus
 
 
@@ -43,34 +54,54 @@ import com.google.accompanist.permissions.PermissionStatus
 fun HomePage(dbHelper: RoomDBHelper) {
     val mashUpHIstoryViewModel = MashUpHIstoryViewModel(dbHelper.mashupHistoryDAO())
     val context = LocalContext.current
-    var numberOfPurchases by rememberSaveable { mutableStateOf("") }
+    var numberOfPurchases by rememberSaveable { mutableStateOf(1) }
     val permissionsState =
         rememberPermissionState(permission = Manifest.permission.CALL_PHONE)
 
-//    val allHistory by mashUpHIstoryViewModel.allHistory.observeAsState()
+    val allHistory by mashUpHIstoryViewModel.allHistory.observeAsState(emptyList())
     Scaffold(
         topBar = {
-            SmallTopAppBar(title = {
+            TopAppBar(title = {
                 Text(
                     stringResource(
                         id = R.string.app_name,
                     ),
-                    style = MaterialTheme.typography.headlineMedium
+                    style = TextStyle(fontWeight = FontWeight.Bold)
                 )
             }
             )
+        },
+        bottomBar = {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "By Gis2alk(Telegram)",
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            data = Uri.parse("https://t.me/gis2alk")
+                        }
+                        context.startActivity(intent)
+                    }, color = if (isSystemInDarkTheme()) Color.White else Color.Blue
+                )
+            }
+
         }
     ) {
         Column(
             modifier = Modifier.padding(it)
         ) {
             Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 PhoneNumberInput { newValue ->
                     numberOfPurchases = newValue
                 }
-                OutlinedButton(
+                IconButton(
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = if (isSystemInDarkTheme()) Color.White else Color.Yellow),
                     modifier = Modifier
                         .height(IntrinsicSize.Max),
                     onClick = {
@@ -101,8 +132,15 @@ fun HomePage(dbHelper: RoomDBHelper) {
                 ) {
                     Image(
                         Icons.Default.Call, contentDescription = "Dial",
+                        colorFilter = ColorFilter.tint(if (isSystemInDarkTheme()) Color.White else Color.Yellow)
                     )
 //                    Text("Buy Mashup")
+                }
+            }
+            LazyColumn {
+                items(allHistory) { history ->
+                    MashUpHistoryItem(historyDTO = history)
+
                 }
             }
         }
@@ -131,20 +169,20 @@ fun Context.sendRequest(calledInExistingActivity: Boolean = true) {
 
 @Composable
 fun PhoneNumberInput(
-    onInputChanged: (String) -> Unit
+    onInputChanged: (Int) -> Unit
 ) {
     val inputFocus = LocalFocusManager.current
     var inputIsInvalid by rememberSaveable { mutableStateOf(true) }
-    var inputText by rememberSaveable { mutableStateOf("") }
+    var inputText by rememberSaveable { mutableStateOf("1") }
     Column {
 
         OutlinedTextField(
-//            modifier = Modifier.,
+            modifier = Modifier.padding(10.dp, 0.dp),
             value = inputText,
             onValueChange = {
                 inputText = it
                 if (inputText.isNumber()) {
-                    onInputChanged.invoke(it)
+                    onInputChanged.invoke(it.toInt())
                 }
             },
             isError = !inputIsInvalid,
