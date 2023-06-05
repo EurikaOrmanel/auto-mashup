@@ -3,11 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_main_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.AutoMashup"
@@ -23,10 +25,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".services.UssdAccessibilityService"
+        <service
+            android:name=".services.UssdAccessibilityService"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <meta-data android:name="android.accessibilityservice" android:resource="@xml/ussd_service_config" />
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/ussd_service_config" />
 
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

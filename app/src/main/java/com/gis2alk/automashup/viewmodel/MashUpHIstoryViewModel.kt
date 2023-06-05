@@ -23,4 +23,10 @@ class MashUpHIstoryViewModel(private val mashUpHistoryDAO: MashUpHistoryDAO) : V
             mashUpRepo.increaseCompleted(id)
         }
     }
+
+    fun deleteOne(historyDTO: MashUpHistoryDTO){
+        coroutineScope.launch {
+            mashUpRepo.deleteOne(historyDTO)
+        }
+    }
 }

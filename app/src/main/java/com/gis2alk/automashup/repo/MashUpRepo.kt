@@ -20,6 +20,12 @@ class MashUpRepo(private val mashUpHistoryDAO: MashUpHistoryDAO) {
         return@withContext mashUpHistoryDAO.findLastOne()
     }
 
+    fun deleteOne(historyDTO: MashUpHistoryDTO) {
+        coroutineScope.launch {
+            mashUpHistoryDAO.deleteOne(historyDTO)
+        }
+    }
+
     fun increaseCompleted(id: Int) {
         coroutineScope.launch {
             mashUpHistoryDAO.increaseCompleted(id)

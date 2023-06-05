@@ -1,5 +1,6 @@
 package com.gis2alk.automashup
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +19,7 @@ import com.gis2alk.automashup.ui.theme.AutoMashupTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
         val dbHelper =
             Room.databaseBuilder(applicationContext, RoomDBHelper::class.java, "history").build()
         setContent {
@@ -26,7 +28,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    HomePage(dbHelper = dbHelper)
+                    HomePage(dbHelper = dbHelper, sharedPref)
                 }
             }
         }

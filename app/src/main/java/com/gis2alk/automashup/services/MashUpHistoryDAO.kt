@@ -21,6 +21,6 @@ interface MashUpHistoryDAO {
     @Query("UPDATE mashupHistory SET completed = completed +1 WHERE id= :id")
     fun increaseCompleted(id: Int)
 
-    @Query("SELECT * FROM mashupHistory ORDER BY id DESC LIMIT 1 ")
+    @Query("SELECT * FROM mashupHistory ORDER BY id ASC LIMIT 1 ")
     fun findLastOne(): MashUpHistoryDTO
 }

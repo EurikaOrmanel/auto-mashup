@@ -1,0 +1,7 @@
+version 1.0-Beta
+* Choose number of times to repeat purchase
+*Repeat purchase
+
+1.1-Beta:
+* Automatically choose MTN to dial with on dual sim devices
+* Check MTN's availability on the device.

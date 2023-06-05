@@ -13,6 +13,7 @@ import com.gis2alk.automashup.viewmodel.MashUpHIstoryViewModel
 import kotlinx.coroutines.*
 
 class UssdAccessibilityService : AccessibilityService() {
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val dbHelper =
             Room.databaseBuilder(applicationContext, RoomDBHelper::class.java, "history").build()
@@ -45,6 +46,7 @@ class UssdAccessibilityService : AccessibilityService() {
             val mashUpHIstoryViewModel = MashUpRepo(dbHelper.mashupHistoryDAO())
             runBlocking {
                 val currentlyWorked = mashUpHIstoryViewModel.getLastOne()
+                print(currentlyWorked)
                 mashUpHIstoryViewModel.increaseCompleted(currentlyWorked.id!!)
                 if (currentlyWorked.completed < currentlyWorked.total) {
                     applicationContext.sendRequest(false)
