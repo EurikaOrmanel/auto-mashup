@@ -9,18 +9,19 @@ import com.gis2alk.automashup.models.ConstantValues
 import com.gis2alk.automashup.models.USSDProcedure
 import com.gis2alk.automashup.pages.sendRequest
 import com.gis2alk.automashup.repo.MashUpRepo
-import com.gis2alk.automashup.viewmodel.MashUpHIstoryViewModel
 import kotlinx.coroutines.*
 
 class UssdAccessibilityService : AccessibilityService() {
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private val deviceViewIds = ConstantValues.currentDeviceViewIds()
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val dbHelper =
             Room.databaseBuilder(applicationContext, RoomDBHelper::class.java, "history").build()
 
         val source = event?.source
+
         if (source != null) {
-            if (event.className?.equals("android.app.AlertDialog") == true) {
+            if (event.className?.equals(deviceViewIds.dialogClassName) == true) {
                 processAProcedure(ConstantValues.mashUpUSSDProcedureForSelf, source, dbHelper)
 
             }
@@ -32,22 +33,20 @@ class UssdAccessibilityService : AccessibilityService() {
         "congrats! you have purchased a mashup of ghc0.07 to be used for all networks plus free whatsapp. dial *550# to check"
 
     private fun processAProcedure(
-        procedure: USSDProcedure,
-        source: AccessibilityNodeInfo,
-        dbHelper: RoomDBHelper
+        procedure: USSDProcedure, source: AccessibilityNodeInfo, dbHelper: RoomDBHelper
     ) {
-        val contentBody = source.findAccessibilityNodeInfosByViewId("com.android.phone:id/msg_text")
+        val contentBody = source.findAccessibilityNodeInfosByViewId(deviceViewIds.ussdText)
         val contentBodyText = contentBody.first().toString().lowercase()
         val currentStep = procedure.ussdSteps.filter { ussdStep ->
             contentBodyText.contains(ussdStep.lookout)
         }
         if (contentBodyText.contains(completedMessage)) {
             clickViewById(source, "android:id/button2")
-            val mashUpHIstoryViewModel = MashUpRepo(dbHelper.mashupHistoryDAO())
+            val mashUpHistoryViewModel = MashUpRepo(dbHelper.mashupHistoryDAO())
             runBlocking {
-                val currentlyWorked = mashUpHIstoryViewModel.getLastOne()
+                val currentlyWorked = mashUpHistoryViewModel.getLastOne()
                 print(currentlyWorked)
-                mashUpHIstoryViewModel.increaseCompleted(currentlyWorked.id!!)
+                mashUpHistoryViewModel.increaseCompleted(currentlyWorked.id!!)
                 if (currentlyWorked.completed < currentlyWorked.total) {
                     applicationContext.sendRequest(false)
                 }
@@ -71,8 +70,7 @@ class UssdAccessibilityService : AccessibilityService() {
         if (inputNode != null) {
             val arguments = Bundle().apply {
                 putCharSequence(
-                    AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                    value
+                    AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value
                 );
             }
             inputNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)

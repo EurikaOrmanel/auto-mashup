@@ -5,3 +5,13 @@ version 1.0-Beta
 1.1-Beta:
 * Automatically choose MTN to dial with on dual sim devices
 * Check MTN's availability on the device.
+
+
+1.2-Beta:
+* USSD Dialog Detection for Huawei,Alcatel and Tecno
+
+
+1.3-Beta:
+* Dialog name specification for Tecno,Alcatel(TCL),Huawei,Xiaomi
+* MTN Network detection fix
+

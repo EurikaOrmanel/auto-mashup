@@ -65,7 +65,6 @@ fun HomePage(dbHelper: RoomDBHelper, sharedPreferences: SharedPreferences) {
     val mashUpHIstoryViewModel = MashUpHIstoryViewModel(dbHelper.mashupHistoryDAO())
     val context = LocalContext.current
     var openJoinUsDialog by remember { mutableStateOf(!joinUsPref.userJoinedCheck()) }
-
     var numberOfPurchases by rememberSaveable { mutableStateOf(1) }
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -132,6 +131,8 @@ fun HomePage(dbHelper: RoomDBHelper, sharedPreferences: SharedPreferences) {
                             mashUpHIstoryViewModel,
                             numberOfPurchases,
                         )
+                        println("Device name: ${ConstantValues.currentDeviceViewIds()}")
+
                     },
                 ) {
                     Image(
@@ -167,26 +168,32 @@ fun HomePagePreview() {
 }
 
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
 fun Context.sendRequest(calledInExistingActivity: Boolean = true) {
 
     val simCardNames = getSimCardNetworks(this)
-    if (simCardNames.contains("MTN")) {
-        val uri = "tel:*567*1*1*1*2" + Uri.encode("#")
-        val mtnIndex = simCardNames.indexOfLast { it.contains("MTN") }
-        val intent = Intent(Intent.ACTION_CALL).apply {
-            data = Uri.parse(uri)
-            ConstantValues.simSlotName.map { putExtra(it, mtnIndex) }
+    simCardNames.mapIndexed { index, networkName ->
+        if (networkName.contains("MTN")) {
+            val uri = "tel:*567*1*1*1*2" + Uri.encode("#")
+            val intent = Intent(Intent.ACTION_CALL).apply {
+                data = Uri.parse(uri)
+                ConstantValues.simSlotName.map { putExtra(it, index) }
 
-            if (!calledInExistingActivity) {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (!calledInExistingActivity) {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
             }
+            this.startActivity(intent)
+        } else {
+            Toast.makeText(
+                this,
+                "There sim to be no MTN sim card in this device.",
+                Toast.LENGTH_LONG
+            )
+                .show()
         }
-        this.startActivity(intent)
-    } else {
-        Toast.makeText(this, "There sim to be no MTN sim card in this device.", Toast.LENGTH_LONG)
-            .show()
+
     }
+
 }
 
 
@@ -213,7 +220,7 @@ fun PhoneNumberInput(
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    inputIsInvalid = inputText.isPhoneNumber()
+                    inputIsInvalid = inputText.isNumber()
                     inputFocus.clearFocus()
                 },
             ),
@@ -221,7 +228,7 @@ fun PhoneNumberInput(
             label = { Text("Number of times") })
 
         if (!inputIsInvalid) {
-            Text("Please input a valid phone number", color = Color.Red)
+            Text("Please input numbers only", color = Color.Red)
         }
     }
 
@@ -240,7 +247,7 @@ fun Context.isAccessibilityServiceRunning(): Boolean {
     } else {
         Toast.makeText(
             this,
-            "Please switch on the accessiblity service for ${this.getString(R.string.app_name)}",
+            "Please switch on the accessibility service for ${this.getString(R.string.app_name)}",
             Toast.LENGTH_LONG
         ).show()
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
@@ -301,7 +308,6 @@ fun requestPhoneStatePermission(activity: Activity) {
 }
 
 // Get the available SIM card network names
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
 fun getSimCardNetworks(context: Context): List<String> {
     val subscriptionManager =
         context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
@@ -311,10 +317,22 @@ fun getSimCardNetworks(context: Context): List<String> {
         ) == PackageManager.PERMISSION_GRANTED
     ) {
         val subscriptionInfoList = subscriptionManager.activeSubscriptionInfoList
+
         return subscriptionInfoList.map { it.carrierName.toString() }
 
     }
     throw Exception("Please permit device to access phone state.")
 
 
+}
+
+
+fun getDeviceName(): String {
+    val manufacturer = Build.MANUFACTURER
+    val model = Build.MODEL
+    return if (model.startsWith(manufacturer)) {
+        model
+    } else {
+        manufacturer
+    }
 }

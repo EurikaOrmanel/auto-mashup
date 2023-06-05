@@ -11,10 +11,10 @@ android {
 
     defaultConfig {
         applicationId "com.gis2alk.automashup"
-        minSdk 21
+        minSdk 22
         targetSdk 33
         versionCode 2
-        versionName "1.1-Beta"
+        versionName "1.3-Beta"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -85,7 +85,6 @@ dependencies {
 
 //    live data as observable
     implementation "androidx.compose.runtime:runtime-livedata:1.4.2"
-
 
 
 }
