@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,6 +55,7 @@ import com.gis2alk.automashup.viewmodel.MashUpHIstoryViewModel
 import com.gis2alk.automashup.widgets.JoinDialog
 import com.gis2alk.automashup.widgets.MashUpHistoryItem
 import com.google.accompanist.permissions.*
+import java.util.Locale
 
 
 @SuppressLint("NewApi")
@@ -222,6 +224,7 @@ fun PhoneNumberInput(
                 onDone = {
                     inputIsInvalid = inputText.isNumber()
                     inputFocus.clearFocus()
+
                 },
             ),
 
@@ -333,6 +336,6 @@ fun getDeviceName(): String {
     return if (model.startsWith(manufacturer)) {
         model
     } else {
-        manufacturer
+        "$manufacturer $model".lowercase(Locale.getDefault())
     }
 }

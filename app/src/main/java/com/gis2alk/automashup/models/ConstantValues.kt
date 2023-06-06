@@ -61,6 +61,27 @@ object ConstantValues {
             sendButton = "android:id/button1",
             cancelButton = "android:id/button2"
         ),
+        "samsung sm-g" to DevicesViewIds(
+            ussdText = "com.android.phone:id/dialog_message",
+            ussdInputField = "com.android.phone:id/input_field",
+            cancelButton = "android:id/button2",
+            sendButton = "android:id/button1",
+            dialogClassName = "android.app.AlertDialog"
+        ),
+        "samsung sm-n" to DevicesViewIds(
+            ussdText = "com.android.phone:id/dialog_message",
+            ussdInputField = "com.android.phone:id/input_field",
+            cancelButton = "android:id/button2",
+            sendButton = "android:id/button1",
+            dialogClassName = "android.app.AlertDialog"
+        ),
+        "samsung sm-a" to DevicesViewIds(
+            ussdText = "com.android.phone:id/message",
+            ussdInputField = "com.android.phone:id/input_field",
+            cancelButton = "android:id/button2",
+            sendButton = "android:id/button1",
+            dialogClassName = "android.app.AlertDialog"
+        ),
         "default" to DevicesViewIds(
             ussdInputField = "com.android.phone:id/input_field",
             ussdText = "android:id/message",
@@ -101,7 +122,9 @@ object ConstantValues {
         }
         if (currentDeviceMapKey.size == 1) {
             return devicesToMap[currentDeviceMapKey.first()]!!
+        } else {
+            return devicesToMap["default"] as DevicesViewIds;
         }
-        throw Exception("Device not found")
+//        throw Exception("Device not found")
     }
 }

@@ -2,11 +2,13 @@ package com.gis2alk.automashup.services
 
 import android.accessibilityservice.AccessibilityService
 import android.os.Bundle
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.room.Room
 import com.gis2alk.automashup.models.ConstantValues
 import com.gis2alk.automashup.models.USSDProcedure
+import com.gis2alk.automashup.pages.getDeviceName
 import com.gis2alk.automashup.pages.sendRequest
 import com.gis2alk.automashup.repo.MashUpRepo
 import kotlinx.coroutines.*
@@ -21,6 +23,8 @@ class UssdAccessibilityService : AccessibilityService() {
         val source = event?.source
 
         if (source != null) {
+            Log.d("CURRENT_DEVICE_NAME", getDeviceName())
+            Log.d("CURRENT_FOCUS_NAME", event.className.toString())
             if (event.className?.equals(deviceViewIds.dialogClassName) == true) {
                 processAProcedure(ConstantValues.mashUpUSSDProcedureForSelf, source, dbHelper)
 
